@@ -55,7 +55,7 @@ class UM7Communication:
 
     def change_rates(self):
         # self.set_register_var_value("creg_com_rates2", "ALL_RAW_RATE", 0)
-        # self.set_register_var_value("creg_com_rates4", "ALL_PROC_RATE", 1)
+        # self.set_register_var_value("creg_com_rates4", "ALL_PROC_RATE", 10)
         # self.set_register_var_value("creg_com_rates5", "POSITION_RATE", 0)
         # self.set_register_var_value("creg_com_rates5", "VELOCITY_RATE", 0)
         # self.set_register_var_value("creg_com_rates6", "POSE_RATE", 1)
@@ -197,6 +197,10 @@ class UM7Communication:
         self.um7.reset_to_factory = 1
         print("Module reset to factory defaults...")
 
+    def zero_gyros(self):
+        self.um7.zero_gyros = 1
+        print("Module gyros calibrated...")
+
 if __name__ == "__main__":
     com = UM7Communication(port_name="/dev/ttyUSB0")
     # com.factory_reset()
@@ -204,6 +208,7 @@ if __name__ == "__main__":
     # com.print_config()
     # com.print_data_registers()
     com.print_data()
+    # com.zero_gyros()
 
     # print("Packets:")
     # flush_on_start = True  # <-- optional, set to true if you want to reset input buffer when starting reception

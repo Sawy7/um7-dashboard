@@ -1,2 +1,4 @@
 rsl-comm-py
 usb_iss
+websockets
+fastapi[all]
