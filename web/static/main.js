@@ -1,4 +1,4 @@
-function createChart(name, type, datasetNames, charts) {
+function createChart(name, type, datasetNames, charts, times) {
     // Define viable plot colors
     const plotColors = ["#ff2700", "#00d353", "#007bff"];
 
@@ -50,42 +50,78 @@ function createChart(name, type, datasetNames, charts) {
     });
 
     charts[name] = chartElement;
+    times[name] = 0;
 }
 
 function processUM7Messages(event) {
     let packet = JSON.parse(event.data);
-    let chart;
 
     switch (packet["packet_type"]) {
         case "UM7AllProcPacket":
-            chart = charts["Acceleration"];
-            chart.data.labels.push(packet["accel_proc_time"]);
-            chart.data.datasets[0].data.push(packet["accel_proc_x"]);
-            chart.data.datasets[1].data.push(packet["accel_proc_y"]);
-            chart.data.datasets[2].data.push(packet["accel_proc_z"]);
+            // Acceleration
+            const accelerationChart = charts["Acceleration"];
+            accelerationChart.data.labels.push(times["Acceleration"]);
+            accelerationChart.data.datasets[0].data.push(packet["accel_proc_x"]);
+            accelerationChart.data.datasets[1].data.push(packet["accel_proc_y"]);
+            accelerationChart.data.datasets[2].data.push(packet["accel_proc_z"]);
 
-            if (chart.data.datasets[0].data.length > 50) {
-                chart.data.labels.shift();
-                chart.data.datasets.forEach((dataset) => {
+            // Gyroscope
+            const gyroChart = charts["Gyroscope"];
+            gyroChart.data.labels.push(times["Acceleration"]);
+            gyroChart.data.datasets[0].data.push(packet["gyro_proc_x"]);
+            gyroChart.data.datasets[1].data.push(packet["gyro_proc_y"]);
+            gyroChart.data.datasets[2].data.push(packet["gyro_proc_z"]);
+
+            // Magnetometer
+            const magChart = charts["Magnetometer"];
+            magChart.data.labels.push(times["Acceleration"]);
+            magChart.data.datasets[0].data.push(packet["mag_proc_x"]);
+            magChart.data.datasets[1].data.push(packet["mag_proc_y"]);
+            magChart.data.datasets[2].data.push(packet["mag_proc_z"]);
+
+            times["Acceleration"]++;
+
+            if (accelerationChart.data.datasets[0].data.length > 50) {
+                // Remove label
+                accelerationChart.data.labels.shift();
+                gyroChart.data.labels.shift();
+                magChart.data.labels.shift();
+
+                // Remove value
+                accelerationChart.data.datasets.forEach((dataset) => {
                     dataset.data.shift();
                 });
-                chart.update("none");
+                gyroChart.data.datasets.forEach((dataset) => {
+                    dataset.data.shift();
+                });
+                magChart.data.datasets.forEach((dataset) => {
+                    dataset.data.shift();
+                });
+
+                // Refresh chart
+                accelerationChart.update("none");
+                gyroChart.update("none");
+                magChart.update("none");
             } else {
-                chart.update();
+                // Refresh chart /w animation
+                accelerationChart.update();
+                gyroChart.update();
+                magChart.update();
             }
+
             break;
         case "UM7HealthPacket":
-            chart = charts["GPS Stats"];
-            chart.data.labels.shift();
-            chart.data.datasets.forEach((dataset) => {
+            const gpsStatsChart = charts["GPS Stats"];
+            gpsStatsChart.data.labels.shift();
+            gpsStatsChart.data.datasets.forEach((dataset) => {
                 dataset.data.shift();
             });
 
-            chart.data.labels.push("");
-            chart.data.datasets[0].data.push(packet["sats_in_view"]);
-            chart.data.datasets[1].data.push(packet["sats_used"]);
+            gpsStatsChart.data.labels.push("");
+            gpsStatsChart.data.datasets[0].data.push(packet["sats_in_view"]);
+            gpsStatsChart.data.datasets[1].data.push(packet["sats_used"]);
 
-            chart.update("none");
+            gpsStatsChart.update("none");
             break;
         case "UM7GPSPacket":
             // chart = charts["GPS"];
@@ -116,6 +152,7 @@ let ws = new WebSocket(`ws://localhost:8000/ws`);
 
 // Chart storage
 let charts = {};
+let times = {};
 
 // Create charts
     // Acceleration
@@ -127,7 +164,29 @@ createChart(
         "Acceleration Y",
         "Acceleration Z"
     ],
-    charts
+    charts, times
+);
+    // Gyroscope
+createChart(
+    "Gyroscope",
+    "line",
+    [
+        "Gyroscope X",
+        "Gyroscope Y",
+        "Gyroscope Z"
+    ],
+    charts, times
+);
+    // Magnetometer
+createChart(
+    "Magnetometer",
+    "line",
+    [
+        "Magnetometer X",
+        "Magnetometer Y",
+        "Magnetometer Z"
+    ],
+    charts, times
 );
     // GPS Stats
 createChart(
@@ -137,7 +196,7 @@ createChart(
         "Satelites in view",
         "Satelites used"
     ],
-    charts
+    charts, times
 );
 //     // GPS
 // createChart(
@@ -147,7 +206,7 @@ createChart(
 //         "Longitude",
 //         "Altitude"
 //     ],
-//     charts
+//     charts, times
 // );
 
 // Process incoming messages
