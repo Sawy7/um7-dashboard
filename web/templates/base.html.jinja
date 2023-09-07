@@ -56,16 +56,26 @@
                             data-bs-target="#sidebarMenu" aria-label="Close"></button>
                     </div>
                     <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
+                        {% set navigation_bar = [
+                            ("/", "index", "Live Data", "bi-graph-up"),
+                            ("/settings", "settings", "Settings", "bi-gear-wide-connected")
+                        ] -%}
+                        {% set active_page = active_page|default('index') -%}
+
+
                         <ul class="nav flex-column">
+                        {% for href, id, caption, icon in navigation_bar %}
                             <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" href="#">
-                                    <i class="bi bi-graph-up text-dark"></i>
-                                    Live Data
+                                <a class="nav-link d-flex align-items-center gap-2 {% if id == active_page %}active{% endif %}"
+                                aria-current="page" href="{% if id != active_page %}{{href|e}}{% else %}#{% endif %}">
+                                    <i class="bi {{ icon|e }} text-dark"></i>
+                                    {{ caption|e }}
                                 </a>
                             </li>
+                        {% endfor %}
                         </ul>
 
-                        <hr class="my-3">
+                        <!-- <hr class="my-3">
 
                         <ul class="nav flex-column mb-auto">
                             <li class="nav-item">
@@ -74,61 +84,20 @@
                                     Settings
                                 </a>
                             </li>
-                        </ul>
+                        </ul> -->
                     </div>
                 </div>
             </div>
 
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Live Data</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- <h2>Data log</h2>
-                <div id="logBox"></div> -->
-
-                <div id="plotBox"></div>
-
-                <!-- <h2>Acceleration</h2>
-                <canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas> -->
-
-                <!-- <h2>Data table</h2>
-                <div class="table-responsive small">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Header</th>
-                                <th scope="col">Header</th>
-                                <th scope="col">Header</th>
-                                <th scope="col">Header</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1,001</td>
-                                <td>random</td>
-                                <td>data</td>
-                                <td>placeholder</td>
-                                <td>text</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div> -->
+                {% block main %}{% endblock %}
             </main>
         </div>
     </div>
 
     <script src="assets/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/chart.js/dist/chart.umd.js"></script>
-    <script src="main.js"></script>
+    {% block footer %}{% endblock %}
 </body>
 
 </html>

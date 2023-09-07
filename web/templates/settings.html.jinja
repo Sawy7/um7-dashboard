@@ -1,0 +1,43 @@
+{% extends "base.html.jinja" %}
+{% set active_page = "settings" %}
+{% block main %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Settings</h1>
+</div>
+
+{% for register in cregs %}
+<h3><span class="badge bg-secondary">{{ register.name }}</span></h3>
+<ul class="list-group">
+    {% for field in register.fields %}
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#{{ field.name }}">
+                    {{ field.name }}
+                </button>
+            </h2>
+
+            <div id="{{ field.name }}" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <p>{{ field.description }}</p>
+                    <p>Data type: <code>{{ field.data_type }}</code></p>
+                    {% if field.enumerated_values %}
+                    <select class="form-select" autocomplete="off" disabled>
+                        {% for ev in field.enumerated_values %}
+                        <option value="{{ ev.value }}" {% if register.field_enum(field.name).value == ev.value %}selected{% endif %}>{{ ev.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <input class="form-control" value="{{ register.field_enum(field.name).value }}" disabled>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</ul>
+<br>
+{% endfor %}
+
+{% endblock %}

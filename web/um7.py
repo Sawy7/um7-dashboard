@@ -51,3 +51,19 @@ class UM7Communication:
         creg_com_settings, *_ = self.um7.creg_com_settings
         creg_com_settings.set_field_value(BAUD_RATE=baudrate_option)
         self.um7.creg_com_settings = creg_com_settings.raw_value
+
+    """
+    """
+    def get_cregs(self):
+        creg_register_values = []
+        for reg in self.um7.svd_parser.cregs:
+            name = reg.name.lower()
+            reg, *_ = getattr(self.um7, name)
+            creg_register_values.append(reg)
+
+        return creg_register_values
+
+if __name__ == "__main__":
+    com = UM7Communication("/dev/ttyUSB0")
+    cregs = com.get_cregs()
+    print(type(cregs[0].fields[0]))
