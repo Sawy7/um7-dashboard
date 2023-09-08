@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+{% block main %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Settings</h1>
+</div>
+
+<div id="loadingSpinner" class="spinner-grow" role="status"></div>
+
+<div id="cregsBox"></div>
+
+<button id="applyButton" type="button" class="btn btn-primary form-button" data-bs-toggle="modal" data-bs-target="#applyModal" style="display: none;">
+    Apply Changes
+</button>
+
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="applyModalLabel">Change persistance</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                How do you want apply changes?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Do nothing</button>
+                <button type="button" class="btn btn-warning">Apply only for now</button>
+                <button type="button" class="btn btn-danger">Commit to flash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script src="settings.js"></script>
+{% endblock %}

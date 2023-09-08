@@ -53,6 +53,7 @@ class UM7Communication:
         self.um7.creg_com_settings = creg_com_settings.raw_value
 
     """
+    This gets all the registers containing settings
     """
     def get_cregs(self):
         creg_register_values = []
@@ -63,7 +64,9 @@ class UM7Communication:
 
         return creg_register_values
 
+    def get_cregs_dict(self):
+        return [x.as_dict() for x in self.get_cregs()]
+
 if __name__ == "__main__":
-    com = UM7Communication("/dev/ttyUSB0")
-    cregs = com.get_cregs()
-    print(type(cregs[0].fields[0]))
+    com = UM7Communication()
+    print(json.dumps(com.get_cregs()))
