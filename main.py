@@ -37,12 +37,13 @@ class UM7Communication:
         sleep(1)
 
     def set_register_var_value(self, register_name, variable, value):
-        # print(f"Setting '{variable}' to {value}...", end="", flush=True)
-        print(f"Setting '{variable}' to {value}...")
         working_register = getattr(self.um7, register_name)[0]
         set_args = {variable: value}
-        working_register.set_field_value(**set_args)
-        setattr(self.um7, register_name, working_register.raw_value)
+        if len(working_register.fields) > 1:
+            working_register.set_field_value(**set_args)
+            setattr(self.um7, register_name, working_register.raw_value)
+        else:
+            setattr(self.um7, register_name, value)
         sleep(1)
 
         # actual_state = getattr(self.um7, register_name)

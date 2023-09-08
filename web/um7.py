@@ -26,8 +26,11 @@ class UM7Communication:
     def set_register_var_value(self, register_name, variable, value):
         working_register = getattr(self.um7, register_name)[0]
         set_args = {variable: value}
-        working_register.set_field_value(**set_args)
-        setattr(self.um7, register_name, working_register.raw_value)
+        if len(working_register.fields) > 1:
+            working_register.set_field_value(**set_args)
+            setattr(self.um7, register_name, working_register.raw_value)
+        else:
+            setattr(self.um7, register_name, value)
 
     """
     This returns last raw log message from the device
@@ -69,4 +72,4 @@ class UM7Communication:
 
 if __name__ == "__main__":
     com = UM7Communication()
-    print(json.dumps(com.get_cregs()))
+    com.set_register_var_value("creg_accel_cal3_2", "ACCEL_CAL3_2", 0)
