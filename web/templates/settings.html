@@ -17,13 +17,16 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="applyModalLabel">Change persistance</h1>
+                <h1 class="modal-title fs-5" id="applyModalLabel">Apply Changes</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="applyModalMsg">
                 How do you want apply changes?
             </div>
-            <div class="modal-footer">
+            <div class="modal-body" id="applyModalMsgNothing" style="display: none;">
+                There is nothing to apply...
+            </div>
+            <div class="modal-footer" id="applyModalButtons">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Do nothing</button>
                 <button type="button" class="btn btn-warning">Apply only for now</button>
                 <button type="button" class="btn btn-danger">Commit to flash</button>

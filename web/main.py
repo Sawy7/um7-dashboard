@@ -2,8 +2,14 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 import asyncio
 from um7 import UM7Communication
+
+# Cregs change model
+class CregsChange(BaseModel):
+    changed: list
+    commit_to_flash: bool
 
 # App and serial setup
 app = FastAPI()
@@ -35,6 +41,17 @@ async def get():
     if cregs is None:
         cregs = com.get_cregs_dict()
     return JSONResponse(content=cregs)
+
+@app.post("/api/cregschange", response_class=JSONResponse)
+async def post(cregs_change: CregsChange):
+    global cregs
+    for c in cregs_change.changed:
+        register = c["register"].lower()
+        field = c["field"].upper()
+        value = c["value"]
+        com.set_register_var_value(register, field, value)
+    cregs = com.get_cregs_dict()
+    return cregs
 
 @app.get("/settings", response_class=HTMLResponse)
 async def get(request: Request):

@@ -60,6 +60,7 @@ function renderCregs(cregs, changedSettings) {
             accordionBody.appendChild(fieldDataType);
 
             let picker;
+            let rangeLabel;
             if (field["enumerated_values"].length > 0) {
                 picker = document.createElement("select");
                 picker.setAttribute("class", "form-select");
@@ -74,32 +75,57 @@ function renderCregs(cregs, changedSettings) {
                 });
             } else {
                 picker = document.createElement("input");
-                picker.setAttribute("class", "form-control");
-                picker.setAttribute("value", field["value"]["value"]);
+                if (field["data_type"] == "uint8_t") {
+                    rangeLabel = document.createElement("label");
+                    const rangeID = `${field["name"]}Range`;
+                    rangeLabel.setAttribute("class", "form-label");
+                    rangeLabel.setAttribute("for", rangeID);
+                    rangeLabel.textContent = field["value"]["value"];
+                    accordionBody.appendChild(rangeLabel);
+
+                    picker.setAttribute("type", "range");
+                    picker.setAttribute("class", "form-range");
+                    picker.setAttribute("id", rangeID);
+                    picker.setAttribute("min", 0);
+                    picker.setAttribute("max", 255);
+                    picker.setAttribute("step", 1);
+                    picker.setAttribute("value", field["value"]["value"]);
+                } else {
+                    picker.setAttribute("class", "form-control");
+                    picker.setAttribute("value", field["value"]["value"]);
+                }
             }
             picker.onchange = () => {
-                if (picker.value === field["value"]["value"])
-                    return;
+                if (rangeLabel !== undefined)
+                    rangeLabel.textContent = picker.value;
+
+                let pickerValue;
+                if (field["data_type"] == "float")
+                    pickerValue = parseFloat(picker.value);
+                else
+                    pickerValue = parseInt(picker.value);
 
                 for (let i = 0; i < changedSettings.length; i++) {
                     const chs = changedSettings[i];
                     
                     if (chs["register"] == register["name"] && chs["field"] == field["name"]) {
-                        if (chs["value"] == picker.value)
+                        if (pickerValue == field["value"]["value"]) {
                             changedSettings.splice(i, 1);
+                        }
                         else
-                            chs["value"] = picker.value;
-                        console.log(changedSettings);
+                            chs["value"] = pickerValue;
                         return;
                     }
                 }
 
+                if (pickerValue == field["value"]["value"])
+                    return;
+
                 changedSettings.push({
                     "register": register["name"],
                     "field": field["name"],
-                    "value": picker.value
-                })
-                console.log(changedSettings);
+                    "value": pickerValue
+                });
 
             };
             accordionBody.appendChild(picker);
@@ -115,7 +141,23 @@ function renderCregs(cregs, changedSettings) {
     });
 
     const applyButton = document.getElementById("applyButton");
-    applyButton.style = "";
+    applyButton.style.display = "";
+    applyButton.onclick = () => {
+        const applyModalMsg = document.getElementById("applyModalMsg");
+        const applyModalMsgNothing = document.getElementById("applyModalMsgNothing");
+        const modalButtons = document.getElementById("applyModalButtons");
+        if (changedSettings.length == 0) {
+            applyModalMsg.style.display = "none";
+            applyModalMsgNothing.style.display = "";
+            modalButtons.children[1].style.display = "none";
+            modalButtons.children[2].style.display = "none";
+        } else {
+            applyModalMsg.style.display = "";
+            applyModalMsgNothing.style.display = "none";
+            modalButtons.children[1].style.display = "";
+            modalButtons.children[2].style.display = "";
+        }
+    };
 
     const loadingSpinner = document.getElementById("loadingSpinner");
     loadingSpinner.style = "display: none;";
