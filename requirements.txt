@@ -1,4 +1,4 @@
-rsl-comm-py
+git+https://github.com/Sawy7/rsl_comm_py.git@testing
 usb_iss
 websockets
 fastapi[all]

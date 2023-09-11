@@ -25,7 +25,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = com.get_json_data()
             await websocket.send_text(str(data))
             await asyncio.sleep(0.0)
-    except WebSocketDisconnect:
+    except:
         pass
 
 # Templates
@@ -39,7 +39,7 @@ async def get(request: Request):
 async def get():
     global cregs
     if cregs is None:
-        cregs = com.get_cregs_dict()
+        cregs = {"status": "ok", "cregs": com.get_cregs_dict()}
     return JSONResponse(content=cregs)
 
 @app.post("/api/cregschange", response_class=JSONResponse)
@@ -49,9 +49,14 @@ async def post(cregs_change: CregsChange):
         register = c["register"].lower()
         field = c["field"].upper()
         value = c["value"]
-        com.set_register_var_value(register, field, value)
-    cregs = com.get_cregs_dict()
-    return cregs
+        try:
+            com.set_register_var_value(register, field, value)
+            if cregs_change.commit_to_flash:
+                com.commit_settings()
+            cregs = {"status": "ok", "cregs": com.get_cregs_dict()}
+            return cregs
+        except:
+           return {"status": "error"}
 
 @app.get("/settings", response_class=HTMLResponse)
 async def get(request: Request):

@@ -5,11 +5,9 @@
     <h1 class="h2">Settings</h1>
 </div>
 
-<div id="loadingSpinner" class="spinner-grow" role="status"></div>
-
 <div id="cregsBox"></div>
 
-<button id="applyButton" type="button" class="btn btn-primary form-button" data-bs-toggle="modal" data-bs-target="#applyModal" style="display: none;">
+<button id="applyButton" type="button" class="btn btn-primary form-button" data-bs-toggle="modal" data-bs-target="#applyModal">
     Apply Changes
 </button>
 
@@ -22,14 +20,15 @@
             </div>
             <div class="modal-body" id="applyModalMsg">
                 How do you want apply changes?
+                <ul class="list-group" id="applyModalChanges"></ul>
             </div>
             <div class="modal-body" id="applyModalMsgNothing" style="display: none;">
                 There is nothing to apply...
             </div>
             <div class="modal-footer" id="applyModalButtons">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Do nothing</button>
-                <button type="button" class="btn btn-warning">Apply only for now</button>
-                <button type="button" class="btn btn-danger">Commit to flash</button>
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Apply only for now</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Commit to flash</button>
             </div>
         </div>
     </div>

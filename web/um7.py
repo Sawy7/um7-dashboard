@@ -67,8 +67,17 @@ class UM7Communication:
 
         return creg_register_values
 
+    """
+    This gets all the registers containing settings as list of dicts
+    """
     def get_cregs_dict(self):
         return [x.as_dict() for x in self.get_cregs()]
+
+    """
+    This commits register changes to UM7 flash memory
+    """
+    def commit_settings(self):
+        self.um7.flash_commit = 1
 
 if __name__ == "__main__":
     com = UM7Communication()

@@ -1,21 +1,160 @@
-function getAllCregs() {
-    let xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", "/api/cregs", false);
-    try {
-        xmlHttp.send(null);
-    } catch (error) {
-        return false;
+function toggleThrobber() {
+    let throbberOverlay = document.getElementById("throbberOverlay");
+    let throbberMsg = document.getElementById("throbberMessage");
+    if (throbberOverlay.style.display != "") {
+        throbberOverlay.style.display = "";
     }
+    else
+        throbberOverlay.style.display = "none";
+    throbberMsg.innerHTML = "";
+}
 
-    return JSON.parse(xmlHttp.responseText);
+function pushAlert(message, type = "primary") {
+    const alertPlace = document.getElementById("alertPlace");
+
+    const alert = document.createElement("div");
+    alert.setAttribute("class", `alert alert-${type} alert-dismissible`);
+    alert.setAttribute("role", "alert");
+    alert.textContent = message + " ";
+
+    const dismissButton = document.createElement("button");
+    dismissButton.setAttribute("type", "button");
+    dismissButton.setAttribute("class", "btn-close");
+    dismissButton.setAttribute("data-bs-dismiss", "alert");
+    dismissButton.setAttribute("aria-label", "Close");
+
+    alert.appendChild(dismissButton);
+    alertPlace.appendChild(alert);
+}
+
+function getAllCregs(cregs, changedSettings) {
+    toggleThrobber();
+
+    setTimeout(() => {
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", "/api/cregs", false);
+        try {
+            xmlHttp.send(null);
+        } catch (error) {
+            pushAlert("Something went wrong. Please refresh the app.", "danger");
+        }
+
+        let response = JSON.parse(xmlHttp.responseText);
+        if (response["status"] === "ok") {
+            cregs = response["cregs"];
+            renderCregs(cregs, changedSettings);
+        }
+        else {
+            pushAlert("Something went wrong. Please refresh the app.", "danger");
+        }
+        toggleThrobber();
+    });
+}
+
+function applyChanges(button, changedSettings, commitToFlash) {
+    let toSend = { "changed": changedSettings, "commit_to_flash": commitToFlash };
+
+    toggleThrobber();
+    setTimeout(() => {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("POST", "/api/cregschange", false);
+        xmlHttp.setRequestHeader("Content-Type", "application/json");
+        try {
+            xmlHttp.send(JSON.stringify(toSend));
+        } catch (error) {
+            pushAlert("Something went wrong. Please refresh the app.", "danger");
+        }
+
+        let response = JSON.parse(xmlHttp.responseText);
+        if (response["status"] === "ok") {
+            changedSettings = [];
+            cregs = response["cregs"];
+            renderCregs(cregs, changedSettings);
+        }
+        else {
+            pushAlert("Something went wrong. Please refresh the app.", "danger");
+        }
+        toggleThrobber();
+    });
+
+}
+
+function setupApplyModal(changedSettings) {
+    const applyButton = document.getElementById("applyButton");
+    const applyForNowButton = document.getElementById("applyModalButtons").children[1];
+    const applyCommitButton = document.getElementById("applyModalButtons").children[2];
+
+    applyButton.onclick = () => {
+        const applyModalMsg = document.getElementById("applyModalMsg");
+        const applyModalMsgNothing = document.getElementById("applyModalMsgNothing");
+        if (changedSettings.length == 0) {
+            applyModalMsg.style.display = "none";
+            applyModalMsgNothing.style.display = "";
+            applyForNowButton.style.display = "none";
+            applyCommitButton.style.display = "none";
+        } else {
+            applyModalMsg.style.display = "";
+            applyModalMsgNothing.style.display = "none";
+            applyForNowButton.style.display = "";
+            applyCommitButton.style.display = "";
+
+            const applyModalChanges = document.getElementById("applyModalChanges");
+            applyModalChanges.innerHTML = "";
+            changedSettings.forEach(chs => {
+                const changeBullet = document.createElement("li");
+                changeBullet.setAttribute("class", "list-group-item text-center");
+
+                const badgeRegister = document.createElement("span");
+                badgeRegister.setAttribute("class", "badge bg-secondary");
+                badgeRegister.textContent = chs["register"];
+                changeBullet.appendChild(badgeRegister);
+
+                const divider = document.createElement("span");
+                divider.textContent = " > ";
+                changeBullet.appendChild(divider);
+
+                const badgeField = badgeRegister.cloneNode();
+                badgeField.textContent = chs["field"];
+                changeBullet.appendChild(badgeField);
+
+                changeBullet.appendChild(document.createElement("br"));
+
+                const values = document.createElement("span");
+                values.appendChild(document.createTextNode("from "));
+
+                const fromValue = document.createElement("code");
+                fromValue.textContent = chs["prevValue"];
+                values.appendChild(fromValue);
+
+                values.appendChild(document.createTextNode(" to "));
+
+                const toValue = document.createElement("code");
+                toValue.textContent = chs["value"];
+                values.appendChild(toValue);
+
+                changeBullet.appendChild(values);
+
+                applyModalChanges.appendChild(changeBullet);
+            });
+        }
+    };
+
+    applyForNowButton.onclick = () => {
+        applyChanges(applyForNowButton, changedSettings, false);
+    };
+
+    applyCommitButton.onclick = () => {
+        applyChanges(applyCommitButton, changedSettings, true);
+    };
 }
 
 function renderCregs(cregs, changedSettings) {
     const cregsBox = document.getElementById("cregsBox");
+    cregsBox.innerHTML = "";
     cregs.forEach(register => {
         // Register heading
         const registerName = document.createElement("h3");
-        
+
         const registerBadge = document.createElement("span");
         registerBadge.setAttribute("class", "badge bg-secondary");
         registerBadge.textContent = register["name"];
@@ -91,6 +230,7 @@ function renderCregs(cregs, changedSettings) {
                     picker.setAttribute("step", 1);
                     picker.setAttribute("value", field["value"]["value"]);
                 } else {
+                    picker.setAttribute("type", "number");
                     picker.setAttribute("class", "form-control");
                     picker.setAttribute("value", field["value"]["value"]);
                 }
@@ -107,7 +247,7 @@ function renderCregs(cregs, changedSettings) {
 
                 for (let i = 0; i < changedSettings.length; i++) {
                     const chs = changedSettings[i];
-                    
+
                     if (chs["register"] == register["name"] && chs["field"] == field["name"]) {
                         if (pickerValue == field["value"]["value"]) {
                             changedSettings.splice(i, 1);
@@ -124,7 +264,8 @@ function renderCregs(cregs, changedSettings) {
                 changedSettings.push({
                     "register": register["name"],
                     "field": field["name"],
-                    "value": pickerValue
+                    "value": pickerValue,
+                    "prevValue": field["value"]["value"]
                 });
 
             };
@@ -140,34 +281,12 @@ function renderCregs(cregs, changedSettings) {
         cregsBox.appendChild(document.createElement("br"));
     });
 
-    const applyButton = document.getElementById("applyButton");
-    applyButton.style.display = "";
-    applyButton.onclick = () => {
-        const applyModalMsg = document.getElementById("applyModalMsg");
-        const applyModalMsgNothing = document.getElementById("applyModalMsgNothing");
-        const modalButtons = document.getElementById("applyModalButtons");
-        if (changedSettings.length == 0) {
-            applyModalMsg.style.display = "none";
-            applyModalMsgNothing.style.display = "";
-            modalButtons.children[1].style.display = "none";
-            modalButtons.children[2].style.display = "none";
-        } else {
-            applyModalMsg.style.display = "";
-            applyModalMsgNothing.style.display = "none";
-            modalButtons.children[1].style.display = "";
-            modalButtons.children[2].style.display = "";
-        }
-    };
+    setupApplyModal(changedSettings);
 
-    const loadingSpinner = document.getElementById("loadingSpinner");
-    loadingSpinner.style = "display: none;";
+    console.log("page updated");
 }
 
-let cregs = getAllCregs();
+// Main starts here
 let changedSettings = [];
-
-if (cregs === false)
-    console.log("API error");
-else {
-    renderCregs(cregs, changedSettings);
-}
+let cregs = []
+getAllCregs(cregs, changedSettings);

@@ -20,6 +20,9 @@
 </head>
 
 <body>
+    <!-- Alert -->
+    <div id="alertPlace"></div>
+
     <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
         <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="#">UM7 Dashboard</a>
 
@@ -45,6 +48,15 @@
         </div>
     </header>
 
+    <!-- Loading throbber -->
+    <div id="throbberOverlay" style="display: none">
+        <div id="throbberContainer" class="text-light text-center">
+            <div class="spinner-border" role="status" id="throbber"></div>
+            <p>Please wait</p>
+            <small id="throbberMessage"></small>
+        </div>
+    </div>
+
     <div class="container-fluid">
         <div class="row">
             <div class="sidebar border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary">
@@ -57,22 +69,23 @@
                     </div>
                     <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
                         {% set navigation_bar = [
-                            ("/", "index", "Live Data", "bi-graph-up"),
-                            ("/settings", "settings", "Settings", "bi-gear-wide-connected")
+                        ("/", "index", "Live Data", "bi-graph-up"),
+                        ("/settings", "settings", "Settings", "bi-gear-wide-connected")
                         ] -%}
                         {% set active_page = active_page|default('index') -%}
 
 
                         <ul class="nav flex-column">
-                        {% for href, id, caption, icon in navigation_bar %}
+                            {% for href, id, caption, icon in navigation_bar %}
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-2 {% if id == active_page %}active{% endif %}"
-                                aria-current="page" href="{% if id != active_page %}{{href|e}}{% else %}#{% endif %}">
+                                    aria-current="page"
+                                    href="{% if id != active_page %}{{href|e}}{% else %}#{% endif %}">
                                     <i class="bi {{ icon|e }} text-dark"></i>
                                     {{ caption|e }}
                                 </a>
                             </li>
-                        {% endfor %}
+                            {% endfor %}
                         </ul>
 
                         <!-- <hr class="my-3">
