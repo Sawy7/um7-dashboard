@@ -147,16 +147,13 @@ function processUM7Messages(event) {
     }
 }
 
-function getRequest(url) {
-    let xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", url, false);
+async function getRequest(url) {
     try {
-        xmlHttp.send(null);
+        const response = await fetch(url);
+        return response.json();
     } catch (error) {
         pushAlert("Something went wrong. Please refresh the app.", "danger");
     }
-
-    return JSON.parse(xmlHttp.responseText);
 }
 
 function toggleCaptureButton(newState) {
@@ -167,6 +164,13 @@ function toggleCaptureButton(newState) {
         captureButton.setAttribute("class", "btn btn-sm btn-outline-secondary");
         captureButton.children[1].textContent = "Capture";
     }
+}
+
+async function getInitialCaptureState() {
+    const response = await getRequest("/api/iscapturing");
+    captureState = response["status"];
+    toggleCaptureButton(captureState);
+    captureButton.disabled = false;
 }
 
 // Start Websocket communication
@@ -235,15 +239,15 @@ createChart(
 ws.onmessage = processUM7Messages;
 
 // Capture
-let captureState = getRequest("/api/iscapturing")["status"];
+let captureState = false;
 const captureButton = document.getElementById("captureButton");
-toggleCaptureButton(captureState);
+getInitialCaptureState();
 
-captureButton.onclick = () => {
+captureButton.onclick = async () => {
     if (!captureState)
-       getRequest("/api/startcapture");
+       await getRequest("/api/startcapture");
     else
-       getRequest("/api/stopcapture");
+       await getRequest("/api/stopcapture");
     captureState = !captureState;
     toggleCaptureButton(captureState);
 };

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, WebSocket
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -38,6 +38,14 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def get(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/captures")
+async def get(request: Request):
+    return templates.TemplateResponse("captures.html", {"request": request, "file_list": DataCapture.list_captures(dbroker.capture)})
+
+@app.get("/downloadcapture/{file_name}")
+async def download_file(file_name: str):
+    return FileResponse(DataCapture.get_file_path(file_name))
 
 @app.get("/api/cregs", response_class=JSONResponse)
 async def get():

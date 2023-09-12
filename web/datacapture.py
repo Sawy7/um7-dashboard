@@ -11,6 +11,18 @@ class DataCapture:
         if not os.path.exists(DataCapture.capture_directory):
             os.makedirs(DataCapture.capture_directory)
 
+    @staticmethod
+    def list_captures(current_capture):
+        directory_list = os.listdir(DataCapture.capture_directory)
+        directory_list.sort(reverse=True)
+        if current_capture is not None:
+            directory_list.remove(current_capture.path)
+        return directory_list
+
+    @staticmethod
+    def get_file_path(file_name):
+        return os.path.join(DataCapture.capture_directory, file_name)
+
     def __init__(self):
         formatted_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.path = f"um7capture_{formatted_datetime}.csv"

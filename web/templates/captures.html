@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set active_page = "captures" %}
+{% block main %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Captures</h1>
+</div>
+
+<div id="downloadBox">
+    <ul class="list-group">
+        {% if file_list|length == 0 %}
+        No captures to be had
+        {% else %}
+        {% for file in file_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ file }}
+            <a class="badge bg-primary rounded-pill" href="{{ url_for('download_file', file_name=file) }}"><i
+                    class="bi bi-download"></i></a>
+        </li>
+        {% endfor %}
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}

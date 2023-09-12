@@ -27,56 +27,59 @@ function pushAlert(message, type = "primary") {
     alertPlace.appendChild(alert);
 }
 
-function getAllCregs(cregs, changedSettings) {
+async function getAllCregs(cregs, changedSettings) {
     toggleThrobber();
-
-    setTimeout(() => {
-        let xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", "/api/cregs", false);
-        try {
-            xmlHttp.send(null);
-        } catch (error) {
-            pushAlert("Something went wrong. Please refresh the app.", "danger");
-        }
-
-        let response = JSON.parse(xmlHttp.responseText);
-        if (response["status"] === "ok") {
-            cregs = response["cregs"];
+    try {
+        const response = await fetch("/api/cregs");
+        const data = await response.json();
+        if (data["status"] === "ok") {
+            cregs = data["cregs"];
             renderCregs(cregs, changedSettings);
         }
         else {
             pushAlert("Something went wrong. Please refresh the app.", "danger");
         }
-        toggleThrobber();
-    });
+
+    } catch (error) {
+        pushAlert("Something went wrong. Please refresh the app.", "danger");
+    } finally {
+        toggleThrobber()
+    }
 }
 
-function applyChanges(button, changedSettings, commitToFlash) {
+async function applyChanges(changedSettings, commitToFlash) {
     let toSend = { "changed": changedSettings, "commit_to_flash": commitToFlash };
 
     toggleThrobber();
-    setTimeout(() => {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("POST", "/api/cregschange", false);
-        xmlHttp.setRequestHeader("Content-Type", "application/json");
-        try {
-            xmlHttp.send(JSON.stringify(toSend));
-        } catch (error) {
-            pushAlert("Something went wrong. Please refresh the app.", "danger");
-        }
+    try {
+        const response = await fetch("/api/cregschange", {
+            method: "POST",
+            mode: "same-origin",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(toSend),
+        });
 
-        let response = JSON.parse(xmlHttp.responseText);
-        if (response["status"] === "ok") {
+        const data = await response.json();
+        if (data["status"] === "ok") {
             changedSettings = [];
-            cregs = response["cregs"];
+            cregs = data["cregs"];
             renderCregs(cregs, changedSettings);
         }
         else {
             pushAlert("Something went wrong. Please refresh the app.", "danger");
         }
-        toggleThrobber();
-    });
 
+    } catch (error) {
+        pushAlert("Something went wrong. Please refresh the app.", "danger");
+    } finally {
+        toggleThrobber()
+    }
 }
 
 function setupApplyModal(changedSettings) {
@@ -140,11 +143,11 @@ function setupApplyModal(changedSettings) {
     };
 
     applyForNowButton.onclick = () => {
-        applyChanges(applyForNowButton, changedSettings, false);
+        applyChanges(changedSettings, false);
     };
 
     applyCommitButton.onclick = () => {
-        applyChanges(applyCommitButton, changedSettings, true);
+        applyChanges(changedSettings, true);
     };
 }
 
