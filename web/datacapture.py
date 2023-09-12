@@ -1,6 +1,7 @@
 import datetime
 import os
 import csv
+from rsl_comm_py.um7_broadcast_packets import UM7AllProcPacket, UM7GPSPacket
 
 class DataCapture:
     capture_directory = "captures/"
@@ -13,20 +14,26 @@ class DataCapture:
     def __init__(self):
         formatted_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.path = f"um7capture_{formatted_datetime}.csv"
-        print(self.path)
+        self.latest_data = {}
+        self.packet_types = ["UM7GPSPacket", "UM7AllProcPacket"]
         self.open_file()
 
     def open_file(self):
         full_path = DataCapture.capture_directory + self.path
         self.file = open(full_path, "w")
-        self.writer = csv.writer(self.file)
+        fieldnames = ["time"] + list(UM7GPSPacket.__annotations__.keys()) + list(UM7AllProcPacket.__annotations__.keys()) + ["packet_type"]
+        self.writer = csv.DictWriter(self.file, fieldnames)
+        self.writer.writeheader()
 
     def close_file(self):
         self.file.close()
 
     async def write(self, data):
-        self.writer.writerow(data)
+        if data["packet_type"] in self.packet_types:
+            self.latest_data.update(data)
+
+        self.latest_data["time"] = datetime.datetime.now().timestamp()
+        self.writer.writerow(self.latest_data)
 
     def __del__(self):
-        print("datacapture object destroyed")
         self.close_file()

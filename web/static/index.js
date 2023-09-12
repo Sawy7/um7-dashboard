@@ -147,6 +147,28 @@ function processUM7Messages(event) {
     }
 }
 
+function getRequest(url) {
+    let xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false);
+    try {
+        xmlHttp.send(null);
+    } catch (error) {
+        pushAlert("Something went wrong. Please refresh the app.", "danger");
+    }
+
+    return JSON.parse(xmlHttp.responseText);
+}
+
+function toggleCaptureButton(newState) {
+    if (newState) {
+        captureButton.setAttribute("class", "btn btn-sm btn-danger");
+        captureButton.children[1].textContent = "Capturing";
+    } else {
+        captureButton.setAttribute("class", "btn btn-sm btn-outline-secondary");
+        captureButton.children[1].textContent = "Capture";
+    }
+}
+
 // Start Websocket communication
 let ws = new WebSocket(`ws://localhost:8000/ws`);
 
@@ -212,25 +234,16 @@ createChart(
 // Process incoming messages
 ws.onmessage = processUM7Messages;
 
-// let logBox = document.getElementById("logBox");
-// ws.onmessage = (event) => {
-//     // let newMsg = document.createElement("div");
-//     // newMsg.setAttribute("class", "alert alert-primary");
-//     // newMsg.innerHTML = event.data;
+// Capture
+let captureState = getRequest("/api/iscapturing")["status"];
+const captureButton = document.getElementById("captureButton");
+toggleCaptureButton(captureState);
 
-//     // logBox.prepend(newMsg);
-
-//     // setTimeout(function () {
-//     //     let bootAlert = new bootstrap.Alert(newMsg);
-//     //     bootAlert.close();
-//     // }, 10000);
-
-//     umMessage = JSON.parse(event.data);
-//     console.log(umMessage);
-
-//     myChart.data.labels.push("yoo");
-//     myChart.data.datasets.forEach((dataset) => {
-//         dataset.data.push(1);
-//     });
-//     myChart.update();
-// };
+captureButton.onclick = () => {
+    if (!captureState)
+       getRequest("/api/startcapture");
+    else
+       getRequest("/api/stopcapture");
+    captureState = !captureState;
+    toggleCaptureButton(captureState);
+};

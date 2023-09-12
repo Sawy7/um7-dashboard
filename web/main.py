@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -77,6 +77,11 @@ async def get():
         return {"status": "ok"}
     else:
         return {"status": "was not running"}
+
+@app.get("/api/iscapturing", response_class=JSONResponse)
+async def get():
+    status = await dbroker.is_capturing()
+    return {"status": status}
 
 @app.get("/settings", response_class=HTMLResponse)
 async def get(request: Request):

@@ -1,6 +1,4 @@
 from rsl_comm_py import UM7Serial
-from rsl_comm_py.rsl_xml_svd.rsl_svd_parser import Register
-import json
 import dataclasses
 
 class UM7Communication:
@@ -39,13 +37,13 @@ class UM7Communication:
         return next(self.um7.recv_broadcast(num_packets=1, flush_buffer_on_start=True))
 
     """
-    This returns last log message formatted as JSON from the device
+    This returns last log message formatted as dict from the device
     """
-    def get_json_data(self):
+    def get_dict_data(self):
         broadcast = next(self.um7.recv_broadcast(num_packets=1, flush_buffer_on_start=True))
         broadcast_dict = dataclasses.asdict(broadcast)
         broadcast_dict["packet_type"] = type(broadcast).__name__
-        return json.dumps(broadcast_dict)
+        return broadcast_dict
 
     """
     This sets the baudrate of the device (default is 115200)

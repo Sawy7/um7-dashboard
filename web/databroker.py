@@ -2,6 +2,7 @@ from fastapi import WebSocket
 from typing import List
 import asyncio
 from threading import Lock
+import json
 
 from um7 import UM7Communication
 from datacapture import DataCapture
@@ -45,22 +46,32 @@ class DataBroker:
 
     async def stop_capture(self):
         self.client_lock.acquire()
+        if self.capture is None:
+            self.client_lock.release()
+            return False
         self.capture = None
         self.client_lock.release()
+        return True
+
+    async def is_capturing(self):
+        self.client_lock.acquire()
+        capturing = self.capture is not None
+        self.client_lock.release()
+        return capturing
 
     async def run(self):
         while True:
-            data = self.com.get_json_data()
+            data = self.com.get_dict_data()
             to_unregister = []
             for i,c in enumerate(self.ws_clients):
                 try:
-                    await c.send_text(str(data))
+                    await c.send_text(json.dumps(data))
                 except:
                     print("unregister", i)
                     to_unregister.append(c)
                     continue
             if self.capture is not None:
-                await self.capture.write(str(data))
+                await self.capture.write(data)
             for c in to_unregister:
                 self.unregister(c)
             if len(self.ws_clients) == 0 and self.capture is None:
