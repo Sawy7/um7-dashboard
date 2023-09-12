@@ -3,10 +3,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-import asyncio
-from um7 import UM7Communication
-from typing import List
-from threading import Lock
+
+from databroker import DataBroker
+from datacapture import DataCapture
 
 # Cregs change model
 class CregsChange(BaseModel):
@@ -15,46 +14,13 @@ class CregsChange(BaseModel):
 
 # App and serial setup
 app = FastAPI()
-com = UM7Communication("/dev/ttyUSB0")
 cregs = None
 
-class DataBroker:
-    def __init__(self):
-        self.ws_clients: List[WebSocket] = []
-        self.client_lock = Lock()
-        self.capture = None
 
-    async def register(self, ws_client: WebSocket):
-        await ws_client.accept()
-        self.client_lock.acquire()
-        initial_clients = len(self.ws_clients)
-        self.client_lock.release()
-        self.ws_clients.append(ws_client)
-        print("initial clients", initial_clients)
-        if initial_clients == 0:
-            asyncio.ensure_future(self.run())
-
-    def unregister(self, ws_client: WebSocket):
-        self.ws_clients.remove(ws_client)
-
-    async def run(self):
-        while True:
-            data = com.get_json_data()
-            to_unregister = []
-            for i,c in enumerate(self.ws_clients):
-                try:
-                    await c.send_text(str(data))
-                except:
-                    print("unregister", i)
-                    to_unregister.append(c)
-                    continue
-                await asyncio.sleep(0.0)
-            for c in to_unregister:
-                self.unregister(c)
-            if len(self.ws_clients) == 0:
-                return
-
+# DataBroker instance
 dbroker = DataBroker()
+# Create 'captures' directory
+DataCapture.create_capture_directory()
 
 # Websocket endpoint
 @app.websocket("/ws")
@@ -77,7 +43,7 @@ async def get(request: Request):
 async def get():
     global cregs
     if cregs is None:
-        cregs = {"status": "ok", "cregs": com.get_cregs_dict()}
+        cregs = {"status": "ok", "cregs": dbroker.com.get_cregs_dict()}
     return JSONResponse(content=cregs)
 
 @app.post("/api/cregschange", response_class=JSONResponse)
@@ -88,21 +54,29 @@ async def post(cregs_change: CregsChange):
         field = c["field"].upper()
         value = c["value"]
         try:
-            com.set_register_var_value(register, field, value)
+            dbroker.com.set_register_var_value(register, field, value)
             if cregs_change.commit_to_flash:
-                com.commit_settings()
-            cregs = {"status": "ok", "cregs": com.get_cregs_dict()}
+                dbroker.com.commit_settings()
+            cregs = {"status": "ok", "cregs": dbroker.com.get_cregs_dict()}
             return cregs
         except:
            return {"status": "error"}
         
 @app.get("/api/startcapture", response_class=JSONResponse)
 async def get():
-    pass
+    status = await dbroker.start_capture()    
+    if status:
+        return {"status": "ok"}
+    else:
+        return {"status": "already running"}
 
-@app.get("/api/endcapture", response_class=JSONResponse)
+@app.get("/api/stopcapture", response_class=JSONResponse)
 async def get():
-    pass
+    status = await dbroker.stop_capture()
+    if status:
+        return {"status": "ok"}
+    else:
+        return {"status": "was not running"}
 
 @app.get("/settings", response_class=HTMLResponse)
 async def get(request: Request):
