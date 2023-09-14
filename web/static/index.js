@@ -174,7 +174,7 @@ async function getInitialCaptureState() {
 }
 
 // Start Websocket communication
-let ws = new WebSocket(`ws://localhost:8000/ws`);
+let ws = new WebSocket(`ws://${location.host}/ws`);
 
 // Chart storage
 let charts = {};
