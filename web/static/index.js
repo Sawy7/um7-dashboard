@@ -97,17 +97,12 @@ function processUM7Messages(event) {
                 magChart.data.datasets.forEach((dataset) => {
                     dataset.data.shift();
                 });
-
-                // Refresh chart
-                accelerationChart.update("none");
-                gyroChart.update("none");
-                magChart.update("none");
-            } else {
-                // Refresh chart /w animation
-                accelerationChart.update();
-                gyroChart.update();
-                magChart.update();
             }
+
+            // Refresh chart
+            accelerationChart.update("none");
+            gyroChart.update("none");
+            magChart.update("none");
 
             break;
         case "UM7HealthPacket":
@@ -124,25 +119,35 @@ function processUM7Messages(event) {
             gpsStatsChart.update("none");
             break;
         case "UM7GPSPacket":
-            // chart = charts["GPS"];
-            // chart.data.labels.push(packet["gps_time"]);
-            // chart.data.datasets[0].data.push(packet["gps_latitude"]);
-            // chart.data.datasets[1].data.push(packet["gps_longitude"]);
-            // chart.data.datasets[2].data.push(packet["gps_altitude"]);
+            // Do nothing
+            console.log(packet["gps_time"], packet["gps_speed"]);
+            break;
+        case "UM7VelocityPacket":
+            const velocityChart = charts["Velocity"];
+            velocityChart.data.labels.push(times["Velocity"]);
+            velocityChart.data.datasets[0].data.push(packet["velocity_north"]);
+            velocityChart.data.datasets[1].data.push(packet["velocity_east"]);
+            velocityChart.data.datasets[2].data.push(packet["velocity_up"]);
 
-            // if (chart.data.datasets[0].data.length > 50) {
-            //     chart.data.labels.shift();
-            //     chart.data.datasets.forEach((dataset) => {
-            //         dataset.data.shift();
-            //     });
-            //     chart.update("none");
-            // } else {
-            //     chart.update();
-            // }
+            times["Velocity"]++;
+
+            if (velocityChart.data.datasets[0].data.length > 50) {
+                // Remove label
+                velocityChart.data.labels.shift();
+
+                // Remove value
+                velocityChart.data.datasets.forEach((dataset) => {
+                    dataset.data.shift();
+                });
+            }
+
+            // Refresh chart
+            velocityChart.update("none");
+
             break;
         default:
-            console.log("Error: Unknown packet type")
-            // console.log(packet)
+            console.log("Error: Unknown packet type");
+            // console.log(packet);
             break;
     }
 }
@@ -150,6 +155,26 @@ function processUM7Messages(event) {
 async function getRequest(url) {
     try {
         const response = await fetch(url);
+        return response.json();
+    } catch (error) {
+        pushAlert("Something went wrong. Please refresh the app.", "danger");
+    }
+}
+
+async function postRequest(url, data) {
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "same-origin",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(data),
+        });
         return response.json();
     } catch (error) {
         pushAlert("Something went wrong. Please refresh the app.", "danger");
@@ -214,6 +239,17 @@ createChart(
     ],
     charts, times
 );
+    // Velocity
+createChart(
+    "Velocity",
+    "line",
+    [
+        "Velocity North",
+        "Velocity East",
+        "Velocity Up"
+    ],
+    charts, times
+)
     // GPS Stats
 createChart(
     "GPS Stats",
@@ -224,16 +260,6 @@ createChart(
     ],
     charts, times
 );
-//     // GPS
-// createChart(
-//     "GPS",
-//     [
-//         "Latitude",
-//         "Longitude",
-//         "Altitude"
-//     ],
-//     charts, times
-// );
 
 // Process incoming messages
 ws.onmessage = processUM7Messages;
@@ -245,7 +271,7 @@ getInitialCaptureState();
 
 captureButton.onclick = async () => {
     if (!captureState)
-       await getRequest("/api/startcapture");
+       await postRequest("/api/startcapture", {"timestamp": Math.floor((new Date()).getTime()/1000)});
     else
        await getRequest("/api/stopcapture");
     captureState = !captureState;
