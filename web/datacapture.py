@@ -2,6 +2,7 @@ import datetime
 import os
 import csv
 from rsl_comm_py.um7_broadcast_packets import UM7AllProcPacket, UM7GPSPacket
+import rsl_comm_py.um7_broadcast_packets
 
 class DataCapture:
     capture_directory = "captures/"
@@ -27,13 +28,16 @@ class DataCapture:
         formatted_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.path = f"um7capture_{formatted_datetime}.csv"
         self.latest_data = {}
-        self.packet_types = ["UM7GPSPacket", "UM7AllProcPacket"]
+        self.packet_types = ["UM7GPSPacket", "UM7AllProcPacket", "UM7VelocityPacket"]
         self.open_file()
 
     def open_file(self):
         full_path = DataCapture.capture_directory + self.path
         self.file = open(full_path, "w")
-        fieldnames = ["time"] + list(UM7GPSPacket.__annotations__.keys()) + list(UM7AllProcPacket.__annotations__.keys()) + ["packet_type"]
+        fieldnames = ["time", "packet_type"]
+        for ptype in self.packet_types:
+            ptype_keys = list(getattr(rsl_comm_py.um7_broadcast_packets, ptype).__annotations__.keys())
+            fieldnames += ptype_keys
         self.writer = csv.DictWriter(self.file, fieldnames)
         self.writer.writeheader()
 

@@ -67,7 +67,6 @@ class DataBroker:
                 try:
                     await c.send_text(json.dumps(data))
                 except:
-                    print("unregister", i)
                     to_unregister.append(c)
                     continue
             if self.capture is not None:
