@@ -198,6 +198,10 @@ class UM7Communication:
         self.um7.reset_to_factory = 1
         print("Module reset to factory defaults...")
 
+    def reset_ekf(self):
+        self.um7.reset_ekf = 1
+        print("Module EKF reset...")
+
     def zero_gyros(self):
         self.um7.zero_gyros = 1
         print("Module gyros calibrated...")
@@ -208,8 +212,9 @@ if __name__ == "__main__":
     # com.commit_settings()
     # com.print_config()
     # com.print_data_registers()
-    com.print_data()
-    # com.zero_gyros()
+    # com.print_data()
+    com.zero_gyros()
+    # com.reset_ekf()
 
     # print("Packets:")
     # flush_on_start = True  # <-- optional, set to true if you want to reset input buffer when starting reception
